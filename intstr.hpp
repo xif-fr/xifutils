@@ -2,11 +2,11 @@
 #define XIF_UTILS_INTSTR_H
 
 	/// Ints <> string conversions
+#include <type_traits>
 #include <limits>
 #include <string>
 #include <algorithm>
 #include <stdexcept>
-#include <xifutils/traits.hpp>
 
 #define IX_HEX 16
 #define IX_HEX_MAJ 160
@@ -15,19 +15,19 @@
 #define IX_BIN 2
 
 template <typename int_t, 
-          class = typename _enable_if_<std::is_signed<int_t>::value>::type>
+          typename = typename std::enable_if<std::is_signed<int_t>::value>::type>
 inline bool _ixisnegative (int_t n) {
 	return (n < 0);
 }
 template <typename int_t, 
-          class = void,
-          class = typename _disable_if_<std::is_signed<int_t>::value>::type>
+          typename = void,
+          typename = typename std::enable_if<not std::is_signed<int_t>::value>::type>
 inline bool _ixisnegative (int_t n) {
 	return false;
 }
 
 template <typename int_t, 
-          class = typename _enable_if_<std::is_integral<int_t>::value>::type>
+          typename = typename std::enable_if<std::is_integral<int_t>::value>::type>
 inline std::string ixtoa (int_t n, uint8_t base = IX_DEC) {
 	const char* _ix_chars = "0123456789abcdef";
 	if (base == IX_HEX_MAJ) {
@@ -48,7 +48,7 @@ inline std::string ixtoa (int_t n, uint8_t base = IX_DEC) {
 	return buffer;
 }
 template <typename ptr_t, 
-          class = typename _enable_if_<std::is_pointer<ptr_t>::value>::type>
+          class = typename std::enable_if<std::is_pointer<ptr_t>::value>::type>
 inline std::string ixtoa (ptr_t p) {
 	return ::ixtoa((uintmax_t)p, IX_HEX);
 }

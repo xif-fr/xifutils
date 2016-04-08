@@ -1,7 +1,6 @@
 #ifndef XIF_UTILS_POLYVAR_H
 #define XIF_UTILS_POLYVAR_H
 
-#include <xifutils/traits.hpp>
 #include <vector>
 #include <map>
 #include <string>
@@ -9,6 +8,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+#include <type_traits>
+#include <limits>
 
 namespace xif {
 	
@@ -38,11 +39,10 @@ namespace xif {
 		polyvar (const std::string& s)                   : _type(STR),   _data(new std::string (s)) {}
 		polyvar (const char* s)                          : _type(STR),   _data(new std::string (s)) {}
 		template <typename float_t, 
-		          typename _enable_if_<std::is_floating_point<float_t>::value,int>::type = 0>
+		          typename std::enable_if<std::is_floating_point<float_t>::value>::type* = nullptr>
 		polyvar (float_t f)                              : _type(FLOAT), _data(new double ((double)f)) {}
 		template <typename int_t, 
-		          typename _enable_if_<std::is_integral<int_t>::value,int>::type = 0, 
-		          typename _disable_if_<sizeof(int_t)==1,int>::type = 0>
+		          typename std::enable_if<std::is_integral<int_t>::value and sizeof(int_t)!=1>::type* = nullptr>
 		polyvar (int_t i)                                : _type(INT),   _data(new intmax_t ((intmax_t)i)) {}
 		polyvar (char c)                                 : _type(CHAR),  _data(new char (c)) {}
 		polyvar (bool b)                                 : _type(BOOL),  _data(new bool (b)) {}
@@ -55,27 +55,31 @@ namespace xif {
 		};
 		type type () const { return this->_type; }
 		
-		                         std::string s () const { if (_type != STR)   throw bad_type();   return *(std::string*)_data; }
+		                  const std::string& s () const { if (_type != STR)   throw bad_type();   return *(std::string*)_data; }
+		                        std::string& s ()       { if (_type != STR)   throw bad_type();   return *(std::string*)_data; }
 		operator std::string ()                   const { return this->s(); }
 		
 		                              double f () const { if (_type != FLOAT) throw bad_type();   return *(double*)_data; }
+		                             double& f ()       { if (_type != FLOAT) throw bad_type();   return *(double*)_data; }
 		template <typename float_t, 
-		          typename _enable_if_<std::is_floating_point<float_t>::value,int>::type = 0>
+		          typename std::enable_if<std::is_floating_point<float_t>::value>::type* = nullptr>
 		operator float_t ()                       const { return (float_t)this->f(); }
 		
 		                            intmax_t i () const { if (_type != INT)   throw bad_type();   return *(intmax_t*)_data; }
+		                           intmax_t& i ()       { if (_type != INT)   throw bad_type();   return *(intmax_t*)_data; }
 		template <typename int_t, 
-		          typename _enable_if_<std::is_integral<int_t>::value,int>::type = 0, 
-		          typename _disable_if_<sizeof(int_t)==1,int>::type = 0>
+		          typename std::enable_if<std::is_integral<int_t>::value and sizeof(int_t)!=1>::type* = nullptr>
 		operator int_t ()                         const { if (this->i() < std::numeric_limits<int_t>::min() or this->i() > std::numeric_limits<int_t>::max()) throw std::overflow_error("destination cast can't handle number");
 		                                                  return (int_t)this->i(); }
 		
 		                                char c () const { if (_type != CHAR)  throw bad_type();   return *(char*)_data; }
+		                               char& c ()       { if (_type != CHAR)  throw bad_type();   return *(char*)_data; }
 		template <typename = char>
 		operator char ()                          const { return this->c(); }
 		
 		                                bool b () const { if (_type != BOOL)  throw bad_type();   return *(bool*)_data; }
-	  template <typename = bool>
+		                               bool& b ()       { if (_type != BOOL)  throw bad_type();   return *(bool*)_data; }
+		template <typename = bool>
 		operator bool ()                          const { return this->b(); }
 		
 		         const std::vector<polyvar>& v () const { if (_type != LIST)  throw bad_type();   return *(const std::vector<polyvar>*)_data; }
