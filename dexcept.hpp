@@ -18,20 +18,22 @@ public:
 	dexcept (const dexcept& o) : _buf(new char*(nullptr)), _str(o._str) {}
 	dexcept (dexcept&& o) : _buf(o._buf), _str(o._str) {}
 	virtual const char* what () const noexcept {
-		if (_buf == nullptr) return _str;
+		if (_str != nullptr) return _str;
 		if (*_buf != nullptr) delete [] *_buf;
 		try {
 			std::string str = this->descr();
 			*_buf = new char[str.length()+1];
 			::memcpy(*_buf, str.c_str(), str.length()+1);
 		} catch (...) {
+			*_buf = nullptr;
 			return NULL;
 		}
 		return *_buf; // Following the std::exception specs, the c-string will be valid until exception deallocation
 	}
 	virtual ~dexcept() noexcept {
-		if (_buf != nullptr) {
+		if (_str == nullptr) {
 			if (*_buf != nullptr) delete [] *_buf;
+			*_buf = nullptr;
 			delete _buf;
 		}
 	}
