@@ -49,6 +49,13 @@ namespace std {
 		}
 	}
 	
+	inline void str_remove_all (std::string& str, const std::string& needle) {
+		if (needle.empty()) return;
+		size_t pos = 0;
+		while ((pos = str.find(needle, pos)) != std::string::npos)
+			str.erase(pos, needle.length());
+	}
+	
 	inline void str_replace_all (std::string& str, std::vector<std::pair<std::string,std::string>> replace_array) {
 		for (std::pair<std::string,std::string> replace_pair : replace_array) {
 			std::str_replace_all(str, replace_pair.first, replace_pair.second);
