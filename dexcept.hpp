@@ -10,7 +10,7 @@ namespace xif {
 class dexcept : public std::exception {
 protected:
 	virtual std::string descr () const = 0; // Message-generating method, to be overloaded
-	char** const _buf;
+	char** const _buf; // pointer on c-string used because of what() constness
 	const char* const _str;
 public:
 	explicit dexcept () noexcept : _buf(new char*(nullptr)), _str(nullptr) {} // what() message will be generated on the fly by descr()

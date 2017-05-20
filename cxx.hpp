@@ -4,6 +4,50 @@
 	/// Foo
 #include <sys/types.h>
 
+	/// Metaprog
+#include <utility>
+#include <tuple>
+
+namespace std {
+	
+	template <bool b, typename T1, typename T2> struct switch_type {};
+	template <typename T1, typename T2> struct switch_type<true,T1,T2> { typedef T1 type; };
+	template <typename T1, typename T2> struct switch_type<false,T1,T2> { typedef T2 type; };
+	
+	template <bool b, typename T1, typename T2>
+	struct opt_pair_t {
+		typedef std::pair<T1,T2> typep;
+		typedef std::tuple<T1,T2> typet;
+	};
+	template <typename T1, typename T2>
+	struct opt_pair_t<false,T1,T2> {
+		typedef T1 typep;
+		typedef std::tuple<T1> typet;
+	};
+	template <bool b, typename T1, typename T2> using opt_pair = typename opt_pair_t<b,T1,T2>::typep;
+	template <bool b, typename T1, typename T2> using opt_tuple = typename opt_pair_t<b,T1,T2>::typet;
+	
+	template <bool b>
+	struct opt_make_t {
+		template <typename T1, typename T2>
+		static opt_pair<b,T1,T2> make_pair (T1&& _1, T2&& _2) { return std::pair<T1,T2>(std::forward<T1>(_1), std::forward<T2>(_2)); }
+		template <typename T1, typename T2>
+		static opt_tuple<b,T1,T2> make_tuple (T1&& _1, T2&& _2) { return std::tuple<T1,T2>(std::forward<T1>(_1), std::forward<T2>(_2)); }
+	};
+	template <>
+	struct opt_make_t<false> {
+		template <typename T1, typename T2>
+		static opt_pair<false,T1,T2> make_pair (T1&& _1, T2&&) { return std::forward<T1>(_1); }
+		template <typename T1, typename T2>
+		static opt_tuple<false,T1,T2> make_tuple (T1&& _1, T2&&) { return std::tuple<T1>(std::forward<T1>(_1)); }
+	};
+	template <bool b, typename T1, typename T2>
+	opt_pair<b,T1,T2> opt_makep (T1&& _1, T2&& _2) { return opt_make_t<b>::template make_pair<T1,T2>(std::forward<T1>(_1), std::forward<T2>(_2)); }
+	template <bool b, typename T1, typename T2>
+	opt_tuple<b,T1,T2> opt_maket (T1&& _1, T2&& _2) { return opt_make_t<b>::template make_tuple<T1,T2>(std::forward<T1>(_1), std::forward<T2>(_2)); }
+
+}
+
 	/// RAII
 #include <functional>
 
